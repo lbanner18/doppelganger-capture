@@ -21,7 +21,7 @@ It is plain POSIX `sh` and runs under BusyBox ash, so it works from a minimal Al
 
 ## Requirements
 
-- **On the machine being copied:** `sh`, `dd`, `tee`, `sha256sum`, `wc`, `mkfifo`, `mktemp`, `stat`, and `zstd` (or `gzip`). On Alpine that is BusyBox plus `apk add zstd`. Two more are optional:
+- **On the boot stick** (the Linux environment that runs the capture, not the OS installed on the disk being copied, which is never started): `sh`, `dd`, `tee`, `sha256sum`, `wc`, `mkfifo`, `mktemp`, `stat`, and `zstd` (or `gzip`). On Alpine that is BusyBox plus `apk add zstd`. Two more are optional:
   - `coreutils` doubles the speed, because its hashing is faster than BusyBox's
   - `lsblk` shows the disk's partitions before you confirm
 - **For SSH destinations:**
