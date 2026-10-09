@@ -1,0 +1,27 @@
+# Settings for capture_auto.sh. Copy to doppelganger.conf next to the script
+# (or to /etc/doppelganger.conf) on the boot stick.
+
+# Where captures go: host:/folder over SSH, or a local folder such as a USB
+# drive (/mnt/usb). The host can be an alias from /root/.ssh/config, which is
+# the place for the user, key, port and host key checking.
+DG_DEST=capture-server:/srv/captures
+
+# Seconds to wait before starting; any key cancels. 0 starts at once.
+DG_COUNTDOWN=10
+
+# Power off when every internal disk is captured (1) or stay on (0).
+DG_POWEROFF=1
+
+# Optional: join a Tailscale network first, with an auth key stored in this
+# file (an ephemeral, reusable key is best for a boot stick). Leave empty to
+# use the network as it is.
+DG_TAILSCALE_AUTHKEY=
+
+# If a capture stops (the network drops), try again this many times,
+# waiting this many seconds in between. Each try resumes.
+DG_RETRIES=10
+DG_RETRY_WAIT=30
+
+# Extra options for capture_to_parts.sh, e.g. smaller chunks lose less work
+# when a capture is interrupted: DG_CAPTURE_OPTIONS="--chunk-size 1G"
+DG_CAPTURE_OPTIONS=

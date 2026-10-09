@@ -2,7 +2,7 @@
 
 Copy a whole disk, a chunk at a time, into a folder of compressed parts, locally or over SSH, from a tiny Linux boot environment. Every chunk is verified with SHA-256, and a capture that stops part-way (power loss, Ctrl-C, a dropped network) resumes where it left off when you run the same command again.
 
-It is plain POSIX `sh` and runs under BusyBox ash, so it works from a minimal Alpine boot stick. The whole pipeline uses well under 32 MiB of memory.
+It is plain POSIX `sh` and runs under BusyBox ash, so it works from a minimal Alpine boot stick. With `capture_auto.sh` it runs hands-off: boot the stick and walk away. The whole pipeline uses well under 32 MiB of memory.
 
 ```text
  source disk, read one chunk at a time                 destination folder (local or over SSH)
@@ -55,6 +55,45 @@ Options:
 | `--allow-mounted` | capture even if the disk is in use (the copy may be inconsistent) |
 
 Run `sh capture_to_parts.sh --help` for everything.
+
+## Hands-off mode
+
+`capture_auto.sh` wraps the capture so nobody has to type anything. Start it at boot on the stick, and it will:
+
+1. bring up the network: DHCP on every wired port, then Wi-Fi if `/etc/wpa_supplicant/wpa_supplicant.conf` exists. Optionally it joins a Tailscale network with an auth key
+2. find the machine's internal disk(s), skipping the boot stick, USB drives, removable and optical media, virtual devices, and any disk with a mounted partition or active swap
+3. name the capture after the machine, for example `Dell-OptiPlex-7090-3f9a2c1b`: the model plus a short fingerprint of the firmware's serial numbers and UUID. The name is the same on every boot, but the serial number itself is never written anywhere
+4. show what it found and count down (10 seconds by default). **Any key cancels**; otherwise it starts by itself
+5. capture each disk with `capture_to_parts.sh`, retrying if the network drops (each retry resumes)
+6. power off when everything is captured
+
+Boot the stick again after a power cut and it resumes the unfinished capture. Boot it on a machine that is already captured and it says so and powers off.
+
+Copy `doppelganger.conf.example` to `doppelganger.conf` next to the script and set `DG_DEST` (and SSH access, as above). Then try it without touching anything:
+
+```sh
+sh capture_auto.sh --dry-run      # the machine name, the disks it would capture, the folders
+```
+
+To start it at boot on Alpine (BusyBox `init`), put it on the first console in `/etc/inittab`, and keep a login prompt on the second:
+
+```
+tty1::once:/bin/sh /path/to/capture_auto.sh
+tty2::respawn:/sbin/getty 38400 tty2
+```
+
+It needs the console so the countdown can see a keypress; without a terminal it just waits out the countdown. Settings, all in the config file:
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `DG_DEST` | (required) | `host:/folder` over SSH, or a local folder |
+| `DG_COUNTDOWN` | `10` | seconds before starting; any key cancels; `0` starts at once |
+| `DG_POWEROFF` | `1` | power off when done |
+| `DG_TAILSCALE_AUTHKEY` | empty | file with a Tailscale auth key; if set, join the tailnet first (needs `tailscale`) |
+| `DG_RETRIES`, `DG_RETRY_WAIT` | `10`, `30` | capture attempts per disk, and seconds between them |
+| `DG_CAPTURE_OPTIONS` | empty | extra options for `capture_to_parts.sh`, e.g. `--chunk-size 1G` |
+
+Tested by booting the real Alpine 3.24 ISO in a VM three times with nothing typed. The first boot started by itself, and its power was cut part-way. The second resumed and powered off by itself. The third saw the finished capture and changed nothing. The rebuilt disk was byte-identical to the original.
 
 ## What you get
 
