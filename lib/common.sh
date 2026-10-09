@@ -357,7 +357,7 @@ dg_storage_controller() {
     _raid=
     while [ -n "$_dir" ] && [ "$_dir" != / ]; do
         case $_dir in */usb[0-9]*) [ -n "$_kind" ] || _kind=usb ;; esac
-        if [ -r "$_dir/class" ]; then
+        if [ -f "$_dir/class" ]; then
             case $(cat "$_dir/class") in
                 0x0108*) _this=nvme ;;
                 0x0106*) _this=sata-ahci ;;
